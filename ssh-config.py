@@ -5,7 +5,8 @@ import sys
 import re
 
 ssh_config = os.environ['HOME'] + '/.ssh/config'
-key_location = os.environ['HOME'] + '/.ssh/ssh-keys/'
+# key_location = os.environ['HOME'] + '/.ssh/ssh-keys/'
+key_location = '/tmp/source/day2ops-keys/ssh-keys/'
 
 box_ip = sys.argv[1]
 
@@ -14,7 +15,6 @@ r = '10\.\d+\.\d+'
 
 
 def check_config_for_ip(box_ip):
-    print("in check_config_for_new_ip")
     grep_config = os.popen('cat ' + ssh_config + ' | grep ' + box_ip)
     result = grep_config.read()
     if result:
@@ -70,12 +70,10 @@ class Entry(object):
 
 # starting main program
 if re.search(r, str(box_ip)):
-    print("Possibly a valid IP")
     check = check_config_for_ip(box_ip)
     if check:
         sys.exit(0)
     else:
-        print("Making a new entry")
         new_entry = Entry(box_ip)
         # new_entry = Entry(box_ip, user, bastion, pem_key)
         print("IP is %s" % new_entry.ip)
