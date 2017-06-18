@@ -5,7 +5,7 @@ import sys
 import re
 
 ssh_config = os.environ['HOME'] + '/.ssh/config'
-key_location = '~/.ssh/ssh-keys/'
+key_location = os.environ['HOME'] + '/.ssh/ssh-keys/'
 
 box_ip = sys.argv[1]
 
@@ -30,6 +30,8 @@ class Entry(object):
         self.ip = box_ip
         self.user = self._get_user()
         self.pem_key = self._get_pem_key()
+        self.proxy_bool = self._get_proxy_bool()
+        self.bastion = self._get_bastion()
 
     def _get_user(self):
         user = raw_input("User: ")
@@ -39,10 +41,30 @@ class Entry(object):
         pem_key = raw_input("Pem key name: ")
         return pem_key
 
+    def _get_proxy_bool(self):
+        proxy_bool = raw_input("Proxy through bastion? (y/n) ")
+        if proxy_bool is "y":
+            return True
+        elif proxy_bool is "n":
+            return False
+        else:
+            print("Invalid input")
+            sys.exit(0)
+
+    def _get_bastion(self):
+        if self.proxy_bool:
+            bastion = raw_input("Bastion IP: ")
+            return bastion
+        else:
+            return None
+
     def append_to_config(self):
+        config_to_add = "\n\nHost %s\n\tUser %s\n\tIdentityFile %s%s" % (str(self.ip), self.user, key_location, self.pem_key)
+        if self.proxy_bool:
+            hp = "%h:%p"
+            config_to_add = config_to_add + "\n\tProxyCommand ssh -F %s -W %s %s" % (ssh_config, hp, self.bastion)
         with open(ssh_config, "a") as f:
-            f.write("\n\nHost %s\n\tUser %s\n\tIdentityFile %s%s" % (str
-                    (self.ip), self.user, key_location, self.pem_key))
+            f.write(config_to_add)
             f.close()
 
 
